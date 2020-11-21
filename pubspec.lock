@@ -8,6 +8,20 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.0"
+  collection:
+    dependency: transitive
+    description:
+      name: collection
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.14.13"
+  equatable:
+    dependency: "direct main"
+    description:
+      name: equatable
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.2.5"
   meta:
     dependency: transitive
     description:
@@ -23,4 +37,4 @@ packages:
     source: hosted
     version: "1.9.2"
 sdks:
-  dart: ">=2.10.3 <3.0.0"
+  dart: ">=2.10.0 <3.0.0"

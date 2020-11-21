@@ -11,18 +11,19 @@ class Pair<A, B> {
 List<Pair<A, B>> zip<A, B>(List<A> a, List<B> b) =>
     List.generate(a.length, (index) => Pair(a[index], b[index]));
 
-class TrieNode {
-  late final List<TrieNode> children;
+class TrieNode<V> {
+  final V? value;
+  late final List<TrieNode<V>> children;
   late Uint8List links;
   late bool terminal;
 
-  TrieNode() {
+  TrieNode(this.value) {
     links = Uint8List(0);
     children = [];
     terminal = false;
   }
 
-  void addLink(int key, TrieNode node) {
+  void addLink(int key, TrieNode<V> node) {
     final newLinks = Uint8List(links.length + 1);
 
     for (var i = 0; i < links.length; i++) {
@@ -45,26 +46,28 @@ class TrieNode {
     }
   }
 
-  Iterable<String> iterate([String prefix = '']) sync* {
+  Iterable<MapEntry<String, V?>> _iterate([List<int> prefix = const []]) sync* {
     for (var i = 0; i < children.length; i++) {
       final child = children[i];
-      final str = prefix + utf8.decode([links[i]]);
+      final str = prefix + [links[i]];
       if (child.terminal) {
-        yield str;
+        yield MapEntry(utf8.decode(str), child.value);
       }
-      yield* child.iterate(str);
+      yield* child._iterate(str);
     }
   }
+
+  Iterable<MapEntry<String, V?>> get values => _iterate();
 }
 
-class Trie {
-  late TrieNode head;
+class Trie<V> {
+  late TrieNode<V> head;
 
   Trie() {
-    head = TrieNode();
+    head = TrieNode(null);
   }
 
-  Iterable<TrieNode> _search(List<int> data) sync* {
+  Iterable<TrieNode<V>> _search(List<int> data) sync* {
     var prefix = head;
 
     for (final char in data) {
@@ -77,15 +80,15 @@ class Trie {
     }
   }
 
-  void insert(String value) {
-    final data = utf8.encode(value);
+  void insert(String key, [V? value]) {
+    final data = utf8.encode(key);
     var prefix = head;
     var i = 0;
     for (prefix in _search(data)) {
       i++;
     }
 
-    if (value.substring(i).isEmpty) {
+    if (key.substring(i).isEmpty) {
       if (!prefix.terminal) {
         prefix.terminal = true;
       }
@@ -93,9 +96,9 @@ class Trie {
       return;
     }
 
-    final updated = <TrieNode>[];
+    final updated = <TrieNode<V>>[];
     for (final char in data.sublist(i)) {
-      final node = TrieNode();
+      final node = TrieNode(value);
       prefix.addLink(char, node);
       updated.add(prefix);
       prefix = node;
@@ -106,7 +109,11 @@ class Trie {
     return;
   }
 
-  bool contains(String value) {
+  bool contains(Object? value) {
+    if (!(value is String)) {
+      return false;
+    }
+
     final data = utf8.encode(value);
     try {
       var prefix = _search(data).last;
@@ -131,15 +138,15 @@ class Trie {
 
     prefix.terminal = false;
 
-    final n = Trie();
-    for (final str in head.iterate()) {
-      n.insert(str);
+    final n = Trie<V>();
+    for (final entry in head.values) {
+      n.insert(entry.key, entry.value);
     }
 
     head = n.head;
   }
 
-  Iterable<String> iterate() => head.iterate();
+  Iterable<MapEntry<String, V?>> get values => head.values;
 }
 
 void main(List<String> arguments) {
@@ -148,14 +155,18 @@ void main(List<String> arguments) {
   test.insert('bar');
   test.insert('baz');
 
+  // ignore: unused_local_variable
   final a = test.contains('bar');
+  // ignore: unused_local_variable
   final b = test.contains('meh');
 
-  final all = test.iterate().toList();
+  // ignore: unused_local_variable
+  final all = List.from(test.values);
 
   test.remove('bar');
 
-  final rAll = test.iterate().toList();
+  // ignore: unused_local_variable
+  final rAll = List.from(test.values);
 
   return;
 }

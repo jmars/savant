@@ -11,6 +11,7 @@
       "type": "dart",
       "vmAdditionalArgs": [
         "--enable-experiment=non-nullable",
+        "--no-sound-null-safety"
       ]
     }
   ]
