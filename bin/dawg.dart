@@ -13,7 +13,7 @@ class Triple<A, B, C> {
 }
 
 class DawgNode extends Equatable {
-  bool terminal;
+  final bool terminal;
   static int DawgID = 0;
 
   late final int id;
@@ -99,7 +99,7 @@ class Dawg<V> {
       node = unchecked_nodes.last.item3;
     }
 
-    final suffix = word.sublist(common_prefix);
+    final suffix = word.sublist(common_prefix, word.length - 1);
     for (final letter in suffix) {
       final next_node = DawgNode();
       node.edges[letter] = next_node;
@@ -107,7 +107,9 @@ class Dawg<V> {
       node = next_node;
     }
 
-    node.terminal = true;
+    final next_node = DawgNode(true);
+    node.edges[word.last] = next_node;
+    unchecked_nodes.add(Triple(node, word.last, next_node));
 
     previous_word = word as Uint8List;
   }
