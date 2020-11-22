@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:bit_array/bit_array.dart';
-import 'murmur2.dart';
+import '../hashing/murmur2.dart';
 
 class BloomFilter {
   late final BitArray array;
