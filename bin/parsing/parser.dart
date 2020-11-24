@@ -13,33 +13,41 @@ class ParseError extends Error {
 class Parser {
   final Map<TokenType, PrefixParselet> prefixParselets = {};
   final Map<TokenType, InfixParselet> infixParselets = {};
-  final Iterator<Token> tokens;
+  late Iterator<Token> _tokens;
 
-  Parser(this.tokens) {
+  Parser(Iterable<Token> tokens) {
+    _tokens = tokens.iterator;
+    consume();
+  }
+
+  set tokens(Iterable<Token> t) {
+    _tokens = t.iterator;
     consume();
   }
 
   Token consume() {
-    final current = tokens.current;
-    tokens.moveNext();
+    final current = _tokens.current;
+    _tokens.moveNext();
     return current;
   }
 
   Token expect(String next) {
-    if (tokens.current.text != next) {
+    if (_tokens.current.text != next) {
       throw Error();
     }
     return consume();
   }
 
-  Token? lookAhead() => tokens.current;
+  Token? lookAhead() => _tokens.current;
 
-  void register(TokenType token, PrefixParselet parselet) {
+  Parser register(TokenType token, PrefixParselet parselet) {
     prefixParselets[token] = parselet;
+    return this;
   }
 
-  void registerInfix(TokenType token, InfixParselet parselet) {
+  Parser registerInfix(TokenType token, InfixParselet parselet) {
     infixParselets[token] = parselet;
+    return this;
   }
 
   int getPrecedence() {
@@ -81,7 +89,7 @@ class Parser {
 void main(List<String> arguments) {
   var tokens = lexer('foo(a).').toList();
 
-  var parser = Parser(tokens.iterator);
+  var parser = Parser(tokens);
 
   parser.register(TokenType.symbol, SymbolParselet());
   parser.register(TokenType.variable, VariableParselet());
@@ -92,6 +100,7 @@ void main(List<String> arguments) {
   parser.registerInfix(TokenType.let, LetParslet());
 
   final parsed = parser.parseExpression();
+  // ignore: unused_local_variable
   final built = AstWalker.walkRules(parsed);
 
   return;

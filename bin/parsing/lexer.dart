@@ -5,7 +5,7 @@ bool isNumeric(String s) {
 }
 
 bool isSymbol(String s) {
-  final re = RegExp(r'[a-z]|[A-Z]|[0-9]');
+  final re = RegExp(r'[a-z]|[A-Z]|[0-9]|_');
   return re.hasMatch(s);
 }
 

@@ -1,5 +1,13 @@
 import 'dart:collection';
 
+import 'package:equatable/equatable.dart';
+
+import 'parsing/build.dart';
+import 'parsing/infix.dart';
+import 'parsing/lexer.dart';
+import 'parsing/parser.dart';
+import 'parsing/prefix.dart';
+
 HashMap<Variable, Value>? merge_bindings(
     HashMap<Variable, Value>? bindings1, HashMap<Variable, Value>? bindings2) {
   if (bindings1 == null || bindings2 == null) {
@@ -36,7 +44,7 @@ abstract class Value {
   Iterable<Value> query(Database database);
 }
 
-class Variable implements Value {
+class Variable extends Equatable implements Value {
   final String name;
 
   const Variable(this.name);
@@ -67,6 +75,9 @@ class Variable implements Value {
   Iterable<Value> query(Database database) sync* {
     yield this;
   }
+
+  @override
+  List<Object> get props => [name];
 }
 
 Iterable<Iterable<Value>> zip(Iterable<List<Value>> arrays) => arrays.first
@@ -201,20 +212,27 @@ class Database {
 }
 
 void main(List<String> arguments) {
-  var knownTerm = Term('father_child', [Term('eric'), Term('thorne')]);
+  final rules = lexer('father_child(eric, thorne).');
 
-  var x = Variable('X');
+  final parser = Parser(rules)
+    ..register(TokenType.symbol, SymbolParselet())
+    ..register(TokenType.variable, VariableParselet())
+    ..register(TokenType.eof, EOFParselet())
+    ..registerInfix(TokenType.comma, CommaParselet())
+    ..registerInfix(TokenType.left_paren, ParenParselet())
+    ..registerInfix(TokenType.period, PeriodParslet())
+    ..registerInfix(TokenType.let, LetParslet());
 
-  var goal = Term('father_child', [Term('eric'), x]);
+  final built = AstWalker.walkRules(parser.parseExpression());
 
-  var bindings = goal.match(knownTerm);
+  final database = Database(built);
 
-  if (bindings == null) {
-    print('No bindings');
-    return;
-  }
+  parser.tokens = lexer('father_child(eric, X)');
+
+  final goal = AstWalker.walk(parser.parseExpression());
 
   // ignore: unused_local_variable
-  var value = goal.substitute(bindings);
+  final results = database.query(goal).toList();
+
   return;
 }

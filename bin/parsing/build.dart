@@ -12,6 +12,8 @@ class AstWalker {
         current = current.right;
       }
 
+      collapsed.add(AstWalker.walk(current));
+
       return collapsed;
     }
 
@@ -57,7 +59,7 @@ class AstWalker {
           throw Error();
         }
 
-        rules.add(Rule(head, Conjunction([TRUE])));
+        rules.add(Rule(head, Conjunction([])));
       }
 
       current = current.right;

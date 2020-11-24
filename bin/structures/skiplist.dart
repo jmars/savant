@@ -12,7 +12,6 @@ class SkipNode<K extends Comparable, V> {
   const SkipNode(this.key, this.value, this.pointers);
 }
 
-// TODO: iterable
 class SkipList<K extends Comparable, V> {
   final int max_level;
   late final SkipNode<K, V> _head;
