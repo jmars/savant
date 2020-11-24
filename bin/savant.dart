@@ -141,7 +141,7 @@ class Conjunction extends Term implements Value {
   @override
   final List<Value> args;
 
-  const Conjunction(this.args) : super(',');
+  const Conjunction(this.args) : super(',', args);
 
   @override
   Value substitute(HashMap<Variable, Value> bindings) =>
