@@ -101,7 +101,7 @@ void main(List<String> arguments) {
 
   final parsed = parser.parseExpression();
   // ignore: unused_local_variable
-  final built = AstWalker.walkRules(parsed);
+  final built = AstWalker.walkDatabase(parsed);
 
   return;
 }

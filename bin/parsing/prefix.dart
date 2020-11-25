@@ -26,3 +26,10 @@ class EOFParselet implements PrefixParselet {
     return EmptyExpression();
   }
 }
+
+class CommandParselet implements PrefixParselet {
+  @override
+  Expression parse(Parser parse, Token token) {
+    return CommandExpression(parse.parseExpression(1));
+  }
+}

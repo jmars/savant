@@ -141,11 +141,19 @@ class True extends Term implements Value {
 
 const TRUE = True();
 
-class Rule {
+abstract class TopLevel {}
+
+class Rule implements TopLevel {
   final Term head;
   final Conjunction body;
 
   const Rule(this.head, this.body);
+}
+
+class Command implements TopLevel {
+  final Term body;
+
+  const Command(this.body);
 }
 
 class Conjunction extends Term implements Value {
@@ -187,9 +195,21 @@ class Conjunction extends Term implements Value {
 }
 
 class Database {
-  final List<Rule> rules;
+  late final List<Rule> rules;
 
-  const Database(this.rules);
+  Database(List<TopLevel> toplevel) {
+    rules = [];
+    for (final top in toplevel) {
+      if (top is Rule) {
+        rules.add(top);
+        continue;
+      }
+      if (top is Command) {
+        // force with toList
+        query(top.body).toList();
+      }
+    }
+  }
 
   Iterable<Value> query(Value goal) sync* {
     for (var rule in rules) {
@@ -212,18 +232,19 @@ class Database {
 }
 
 void main(List<String> arguments) {
-  final rules = lexer('father_child(eric, thorne).');
+  final rules = lexer(':- foo(x).');
 
   final parser = Parser(rules)
     ..register(TokenType.symbol, SymbolParselet())
     ..register(TokenType.variable, VariableParselet())
+    ..register(TokenType.let, CommandParselet())
     ..register(TokenType.eof, EOFParselet())
     ..registerInfix(TokenType.comma, CommaParselet())
     ..registerInfix(TokenType.left_paren, ParenParselet())
     ..registerInfix(TokenType.period, PeriodParslet())
     ..registerInfix(TokenType.let, LetParslet());
 
-  final built = AstWalker.walkRules(parser.parseExpression());
+  final built = AstWalker.walkDatabase(parser.parseExpression());
 
   final database = Database(built);
 

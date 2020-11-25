@@ -80,3 +80,14 @@ class RuleExpression implements Expression {
     throw UnimplementedError();
   }
 }
+
+class CommandExpression implements Expression {
+  final Expression command;
+
+  CommandExpression(this.command);
+
+  @override
+  String print(StringBuffer buffer) {
+    throw UnimplementedError();
+  }
+}

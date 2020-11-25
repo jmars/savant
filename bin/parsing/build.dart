@@ -20,8 +20,8 @@ class AstWalker {
     return [AstWalker.walk(args)];
   }
 
-  static List<Rule> walkRules(Expression arg) {
-    final rules = <Rule>[];
+  static List<TopLevel> walkDatabase(Expression arg) {
+    final rules = <TopLevel>[];
 
     if (arg is! PeriodExpression) {
       throw Error();
@@ -62,6 +62,16 @@ class AstWalker {
         rules.add(Rule(head, Conjunction([])));
       }
 
+      if (left is CommandExpression) {
+        final term = AstWalker.walk(left.command);
+
+        if (term is! Term) {
+          throw Error();
+        }
+
+        rules.add(Command(term));
+      }
+
       current = current.right;
     }
 
@@ -90,6 +100,9 @@ class AstWalker {
     }
     if (expr is ConjunctionExpression) {
       return Conjunction(AstWalker.walkArgs(expr));
+    }
+    if (expr is CommandExpression) {
+      throw Error();
     }
     if (expr is PeriodExpression) {
       throw Error();
