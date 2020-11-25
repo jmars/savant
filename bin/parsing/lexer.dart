@@ -89,6 +89,8 @@ Iterable<Token> lexer(String string) sync* {
     switch (char) {
       case ' ':
         continue;
+      case '\n':
+        continue;
       case '(':
         currentType = TokenType.left_paren;
         currentText = ['('];

@@ -101,10 +101,13 @@ class AstWalker {
     if (expr is ConjunctionExpression) {
       return Conjunction(AstWalker.walkArgs(expr));
     }
-    if (expr is CommandExpression) {
-      throw Error();
+    if (expr is PeriodExpression && expr.right is EmptyExpression) {
+      return AstWalker.walk(expr.left);
     }
     if (expr is PeriodExpression) {
+      throw Error();
+    }
+    if (expr is CommandExpression) {
       throw Error();
     }
     if (expr is EmptyExpression) {

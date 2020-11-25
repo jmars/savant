@@ -232,7 +232,7 @@ class Database {
 }
 
 void main(List<String> arguments) {
-  final rules = lexer(':- foo(x).');
+  final rules = lexer('foo(1).\nfoo(2).');
 
   final parser = Parser(rules)
     ..register(TokenType.symbol, SymbolParselet())
@@ -248,7 +248,7 @@ void main(List<String> arguments) {
 
   final database = Database(built);
 
-  parser.tokens = lexer('father_child(eric, X)');
+  parser.tokens = lexer('foo(X).');
 
   final goal = AstWalker.walk(parser.parseExpression());
 
