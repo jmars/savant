@@ -28,8 +28,22 @@ class ParenParselet implements InfixParselet {
   @override
   Expression parse(Parser parser, Expression left, Token token) {
     final operand = parser.parseExpression(precedence - 1);
+    final args = [operand];
+
+    while (parser.lookAhead()?.type == TokenType.comma) {
+      parser.expect(',');
+      args.add(parser.parseExpression(precedence - 1));
+    }
+
+    final expressions = args.reversed.reduce((value, element) {
+      if (element is! ConjunctionExpression) {
+        return ConjunctionExpression(element, value);
+      }
+      return ConjunctionExpression(element, value);
+    });
+
     parser.expect(')');
-    return TermExpression(left, operand);
+    return TermExpression(left, expressions);
   }
 
   @override

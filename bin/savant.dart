@@ -80,6 +80,12 @@ class Variable extends Equatable implements Value {
   List<Object> get props => [name];
 }
 
+class AttVar extends Variable {
+  final Term attribute;
+
+  AttVar(String name, this.attribute) : super(name);
+}
+
 Iterable<Iterable<Value>> zip(Iterable<List<Value>> arrays) => arrays.first
     .asMap()
     .entries
@@ -316,13 +322,34 @@ void main(List<String> arguments) {
 
   final database = Database(built);
 
-  parser.tokens = lexer('foo(X), bar(X).');
+  parser.tokens = lexer('gt(X, 5, Y), bar(Y), foo(Y).');
 
   final parsed = parser.parseExpression();
   final goal = AstWalker.walk(parsed);
 
+  database.registerBuiltin('gt/3', (database, args) sync* {
+    if (args.length != 3) {
+      throw Error();
+    }
+
+    final input = args[0];
+    final value = args[1];
+    final output = args[2];
+
+    if (input is! Variable || value is! Number || output is! Variable) {
+      throw Error();
+    }
+
+    yield Term('gt', [
+      input,
+      value,
+      AttVar(output.name, Term('>', [value]))
+    ]);
+  });
+
   database.registerBuiltin('bar/1', (database, args) sync* {
     var i = 0;
+    print(args);
     while (i < 10) {
       yield Term('bar', [Number(i.toDouble())]);
       i++;
