@@ -96,9 +96,11 @@ class Number extends Equatable implements Value {
       if (other != this) {
         return null;
       }
+
+      return HashMap();
     }
 
-    return null;
+    return other.match(this);
   }
 
   @override
@@ -314,7 +316,7 @@ void main(List<String> arguments) {
 
   final database = Database(built);
 
-  parser.tokens = lexer('bar(X).');
+  parser.tokens = lexer('foo(X), bar(X).');
 
   final parsed = parser.parseExpression();
   final goal = AstWalker.walk(parsed);
