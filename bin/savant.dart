@@ -305,7 +305,7 @@ class Database {
 }
 
 void main(List<String> arguments) {
-  final rules = lexer('foo(1).\nfoo(2).').toList();
+  final rules = lexer('foo(1).\nfoo(6).').toList();
 
   final parser = Parser(rules)
     ..register(TokenType.symbol, SymbolParselet())
@@ -348,8 +348,25 @@ void main(List<String> arguments) {
   });
 
   database.registerBuiltin('bar/1', (database, args) sync* {
+    final arg = args[0];
+
+    if (arg is AttVar && arg.attribute.functor == '>/1') {
+      final min = arg.attribute.args[0];
+
+      if (min is! Number) {
+        throw Error();
+      }
+
+      var i = min.value + 1;
+      while (i < 10) {
+        yield Term('bar', [Number(i.toDouble())]);
+        i++;
+      }
+
+      return;
+    }
+
     var i = 0;
-    print(args);
     while (i < 10) {
       yield Term('bar', [Number(i.toDouble())]);
       i++;
