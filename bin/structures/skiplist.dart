@@ -91,16 +91,3 @@ class SkipList<K extends Comparable, V> {
     }
   }
 }
-
-void main(List<String> arguments) {
-  var test = SkipList<String, void>(32);
-  test.insert('aaa', null);
-  test.insert('bbb', null);
-  test.insert('ccc', null);
-  test.remove('bbb');
-
-  // ignore: unused_local_variable
-  final a = test.find('ccc');
-
-  print('foo');
-}

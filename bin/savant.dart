@@ -39,6 +39,7 @@ HashMap<Variable, Value>? merge_bindings(
 }
 
 abstract class Value {
+  String get functor;
   HashMap<Variable, Value>? match(Value other);
   Value substitute(HashMap<Variable, Value> bindings);
   Iterable<Value> query(Database database);
@@ -48,6 +49,9 @@ class Variable extends Equatable implements Value {
   final String name;
 
   const Variable(this.name);
+
+  @override
+  String get functor => name + '/var';
 
   @override
   HashMap<Variable, Value>? match(Value other) {
@@ -86,10 +90,13 @@ Iterable<Iterable<Value>> zip(Iterable<List<Value>> arrays) => arrays.first
     .map((entry) => arrays.map((array) => array[entry.key]));
 
 class Term implements Value {
-  final String functor;
+  final String name;
   final List<Value> args;
 
-  const Term(this.functor, [this.args = const []]);
+  Term(this.name, [this.args = const []]);
+
+  @override
+  String get functor => [name, args.length.toString()].join('/');
 
   @override
   HashMap<Variable, Value>? match(Value other) {
@@ -118,8 +125,8 @@ class Term implements Value {
   }
 
   @override
-  Value substitute(HashMap<Variable, Value> bindings) => Term(
-      functor, List<Value>.from(args.map((arg) => arg.substitute(bindings))));
+  Value substitute(HashMap<Variable, Value> bindings) =>
+      Term(name, List<Value>.from(args.map((arg) => arg.substitute(bindings))));
 
   @override
   Iterable<Value> query(Database database) sync* {
@@ -128,7 +135,7 @@ class Term implements Value {
 }
 
 class True extends Term implements Value {
-  const True([String functor = 'true']) : super(functor);
+  True([String functor = 'true']) : super(functor);
 
   @override
   Value substitute(HashMap<Variable, Value> bindings) => this;
@@ -138,8 +145,6 @@ class True extends Term implements Value {
     yield this;
   }
 }
-
-const TRUE = True();
 
 abstract class TopLevel {}
 
@@ -160,7 +165,7 @@ class Conjunction extends Term implements Value {
   @override
   final List<Value> args;
 
-  const Conjunction(this.args) : super(',', args);
+  Conjunction(this.args) : super(',', args);
 
   @override
   Value substitute(HashMap<Variable, Value> bindings) =>
@@ -194,14 +199,22 @@ class Conjunction extends Term implements Value {
   }
 }
 
+typedef Builtin = Iterable<Value> Function(Database database, List<Value> args);
+
 class Database {
-  late final List<Rule> rules;
+  late final Map<String, List<Rule>> rules;
+  late final Map<String, Builtin> builtins;
 
   Database(List<TopLevel> toplevel) {
-    rules = [];
+    builtins = {};
+    rules = {};
     for (final top in toplevel) {
       if (top is Rule) {
-        rules.add(top);
+        final functor = top.head.functor;
+        var instances = rules[functor];
+        instances ??= [];
+        instances.add(top);
+        rules[functor] = instances;
         continue;
       }
       if (top is Command) {
@@ -211,8 +224,31 @@ class Database {
     }
   }
 
+  Database registerBuiltin(String proto, Builtin builtin) {
+    builtins[proto] = builtin;
+    return this;
+  }
+
   Iterable<Value> query(Value goal) sync* {
-    for (var rule in rules) {
+    if (goal is Conjunction) {
+      yield* goal.query(this);
+      return;
+    }
+
+    final func = builtins[goal.functor];
+
+    if (func != null && goal is Term) {
+      yield* func(this, goal.args);
+      return;
+    }
+
+    final all = rules[goal.functor];
+
+    if (all == null) {
+      return;
+    }
+
+    for (var rule in all) {
       var match = rule.head.match(goal);
 
       if (match != null) {
@@ -248,11 +284,21 @@ void main(List<String> arguments) {
 
   final database = Database(built);
 
-  parser.tokens = lexer('foo(X).');
+  parser.tokens = lexer('foo(X), bar(X).');
 
-  final goal = AstWalker.walk(parser.parseExpression());
+  final parsed = parser.parseExpression();
+  final goal = AstWalker.walk(parsed);
 
   // ignore: unused_local_variable
+  database.registerBuiltin('bar/1', (database, args) sync* {
+    var i = 0;
+    while (i < 10) {
+      final s = i.toString();
+      yield Term('bar', [Term(s, [])]);
+      i++;
+    }
+  });
+
   final results = database.query(goal).toList();
 
   return;

@@ -221,17 +221,3 @@ class Dawg<V> {
     }
   }
 }
-
-void main(List<String> arguments) {
-  final dawg = Dawg();
-
-  dawg.insert('cat', 1);
-  dawg.insert('catnip', 2);
-  dawg.insert('zcatnip', 3);
-
-  dawg.finish();
-
-  dawg.display();
-
-  print('hello world');
-}

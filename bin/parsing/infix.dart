@@ -11,9 +11,9 @@ extension IntValue on Precedence {
         return 1;
       case Precedence.rule:
         return 2;
-      case Precedence.term:
-        return 3;
       case Precedence.conjunction:
+        return 3;
+      case Precedence.term:
         return 4;
     }
   }

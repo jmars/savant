@@ -148,25 +148,3 @@ class Trie<V> {
 
   Iterable<MapEntry<String, V?>> get values => head.values;
 }
-
-void main(List<String> arguments) {
-  var test = Trie();
-  test.insert('foo');
-  test.insert('bar');
-  test.insert('baz');
-
-  // ignore: unused_local_variable
-  final a = test.contains('bar');
-  // ignore: unused_local_variable
-  final b = test.contains('meh');
-
-  // ignore: unused_local_variable
-  final all = List.from(test.values);
-
-  test.remove('bar');
-
-  // ignore: unused_local_variable
-  final rAll = List.from(test.values);
-
-  return;
-}
