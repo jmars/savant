@@ -39,7 +39,6 @@ HashMap<Variable, Value>? merge_bindings(
 }
 
 abstract class Value {
-  String get functor;
   HashMap<Variable, Value>? match(Value other);
   Value substitute(HashMap<Variable, Value> bindings);
   Iterable<Value> query(Database database);
@@ -49,9 +48,6 @@ class Variable extends Equatable implements Value {
   final String name;
 
   const Variable(this.name);
-
-  @override
-  String get functor => name + '/var';
 
   @override
   HashMap<Variable, Value>? match(Value other) {
@@ -89,13 +85,42 @@ Iterable<Iterable<Value>> zip(Iterable<List<Value>> arrays) => arrays.first
     .entries
     .map((entry) => arrays.map((array) => array[entry.key]));
 
+class Number extends Equatable implements Value {
+  final double value;
+
+  Number(this.value);
+
+  @override
+  HashMap<Variable, Value>? match(Value other) {
+    if (other is Number) {
+      if (other != this) {
+        return null;
+      }
+    }
+
+    return null;
+  }
+
+  @override
+  Iterable<Value> query(Database database) sync* {
+    yield this;
+  }
+
+  @override
+  Value substitute(HashMap<Variable, Value> bindings) {
+    return this;
+  }
+
+  @override
+  List<Object> get props => [value];
+}
+
 class Term implements Value {
   final String name;
   final List<Value> args;
 
   Term(this.name, [this.args = const []]);
 
-  @override
   String get functor => [name, args.length.toString()].join('/');
 
   @override
@@ -235,6 +260,10 @@ class Database {
       return;
     }
 
+    if (goal is! Term) {
+      throw Error();
+    }
+
     final func = builtins[goal.functor];
 
     if (func != null && goal is Term) {
@@ -268,10 +297,11 @@ class Database {
 }
 
 void main(List<String> arguments) {
-  final rules = lexer('foo(1).\nfoo(2).');
+  final rules = lexer('foo(1).\nfoo(2).').toList();
 
   final parser = Parser(rules)
     ..register(TokenType.symbol, SymbolParselet())
+    ..register(TokenType.number, NumberParselet())
     ..register(TokenType.variable, VariableParselet())
     ..register(TokenType.let, CommandParselet())
     ..register(TokenType.eof, EOFParselet())
@@ -284,21 +314,20 @@ void main(List<String> arguments) {
 
   final database = Database(built);
 
-  parser.tokens = lexer('foo(X), bar(X).');
+  parser.tokens = lexer('bar(X).');
 
   final parsed = parser.parseExpression();
   final goal = AstWalker.walk(parsed);
 
-  // ignore: unused_local_variable
   database.registerBuiltin('bar/1', (database, args) sync* {
     var i = 0;
     while (i < 10) {
-      final s = i.toString();
-      yield Term('bar', [Term(s, [])]);
+      yield Term('bar', [Number(i.toDouble())]);
       i++;
     }
   });
 
+  // ignore: unused_local_variable
   final results = database.query(goal).toList();
 
   return;

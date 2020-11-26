@@ -86,6 +86,9 @@ class AstWalker {
     if (expr is SymbolExpression) {
       return Term(expr.symbol);
     }
+    if (expr is NumberExpression) {
+      return Number(expr.value);
+    }
     if (expr is VariableExpression) {
       return Variable(expr.name);
     }

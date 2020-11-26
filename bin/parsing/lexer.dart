@@ -127,6 +127,8 @@ Iterable<Token> lexer(String string) sync* {
     if (currentType == null) {
       if (isVar(char)) {
         currentType = TokenType.variable;
+      } else if (isNumeric(char)) {
+        currentType = TokenType.number;
       } else {
         currentType = TokenType.symbol;
       }

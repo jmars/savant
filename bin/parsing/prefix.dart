@@ -13,6 +13,19 @@ class SymbolParselet implements PrefixParselet {
   }
 }
 
+class NumberParselet implements PrefixParselet {
+  @override
+  Expression parse(Parser parse, Token token) {
+    final value = double.tryParse(token.text);
+
+    if (value == null) {
+      throw Error();
+    }
+
+    return NumberExpression(value);
+  }
+}
+
 class VariableParselet implements PrefixParselet {
   @override
   Expression parse(Parser parse, Token token) {

@@ -13,6 +13,17 @@ class SymbolExpression implements Expression {
   }
 }
 
+class NumberExpression implements Expression {
+  final double value;
+
+  const NumberExpression(this.value);
+
+  @override
+  String print(StringBuffer buffer) {
+    throw UnimplementedError();
+  }
+}
+
 class VariableExpression implements Expression {
   final String name;
 
