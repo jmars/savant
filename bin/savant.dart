@@ -80,10 +80,24 @@ class Variable extends Equatable implements Value {
   List<Object> get props => [name];
 }
 
+typedef Unify = HashMap<Variable, Value>? Function(AttVar self, Value other);
+
 class AttVar extends Variable {
   final Term attribute;
+  final Unify? unify;
 
-  AttVar(String name, this.attribute) : super(name);
+  AttVar(String name, this.attribute, [this.unify]) : super(name);
+
+  @override
+  HashMap<Variable, Value>? match(Value other) {
+    final custom = unify;
+
+    if (custom == null) {
+      return super.match(other);
+    }
+
+    return custom(this, other);
+  }
 }
 
 Iterable<Iterable<Value>> zip(Iterable<List<Value>> arrays) => arrays.first
@@ -322,7 +336,7 @@ void main(List<String> arguments) {
 
   final database = Database(built);
 
-  parser.tokens = lexer('gt(X, 5, Y), bar(Y), foo(Y).');
+  parser.tokens = lexer('gt(X, 5, Y), foo(Y).');
 
   final parsed = parser.parseExpression();
   final goal = AstWalker.walk(parsed);
@@ -343,7 +357,20 @@ void main(List<String> arguments) {
     yield Term('gt', [
       input,
       value,
-      AttVar(output.name, Term('>', [value]))
+      AttVar(output.name, Term('>', [value]), (Variable self, Value other) {
+        if (other is! Number) {
+          return null;
+        }
+
+        final bindings = HashMap<Variable, Value>();
+
+        if (other != self && other.value > value.value) {
+          bindings[self] = other;
+          return bindings;
+        }
+
+        return null;
+      })
     ]);
   });
 
