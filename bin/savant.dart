@@ -362,9 +362,8 @@ void main(List<String> arguments) {
           return null;
         }
 
-        final bindings = HashMap<Variable, Value>();
-
         if (other != self && other.value > value.value) {
+          final bindings = HashMap<Variable, Value>();
           bindings[self] = other;
           return bindings;
         }
